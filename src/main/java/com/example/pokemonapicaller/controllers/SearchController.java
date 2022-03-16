@@ -4,8 +4,13 @@ import java.io.ByteArrayInputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.util.List;
+import java.util.Optional;
 import java.util.logging.Logger;
 
+import com.example.pokemonapicaller.model.Pokemon;
+import com.example.pokemonapicaller.services.PokemonService;
+
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
@@ -24,6 +29,9 @@ import jakarta.json.JsonReader;
 public class SearchController {
     Logger logger = Logger.getLogger(SearchController.class.getName());
 
+    @Autowired
+    PokemonService pokemonService;
+
     @GetMapping
     public String searchPokemon(Model model, @RequestParam(name = "pokemon_name") String pokemonName) {
         RestTemplate template = new RestTemplate();
@@ -37,7 +45,7 @@ public class SearchController {
                 String resultName = data.getJsonArray("forms")
                         .getJsonObject(0)
                         .getString("name");
-                model.addAttribute("resultName", resultName);
+                model.addAttribute("resultName", resultName.toUpperCase());
                 List<String> sprites = data.getJsonObject("sprites")
                         .getJsonObject("versions")
                         .getJsonObject("generation-i")
@@ -60,5 +68,17 @@ public class SearchController {
         } catch (HttpClientErrorException e) {
             return "notFound";
         }
+    }
+
+    @GetMapping
+    public String searchPokemon2(Model model, @RequestParam(name = "pokemon_name") String pokemonName) {
+        Optional<Pokemon> optional = pokemonService.findPokemon(pokemonName);
+        if (optional.isEmpty()) {
+            return "notFound";
+        }
+        Pokemon pokemon = optional.get();
+        model.addAttribute("resultName", pokemon.getName());
+        model.addAttribute("pictures", pokemon.getImages());
+        return "result";
     }
 }
