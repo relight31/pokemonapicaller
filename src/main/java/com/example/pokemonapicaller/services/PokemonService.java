@@ -15,6 +15,7 @@ public class PokemonService {
         String searchTerm = url.formatted(name);
         RestTemplate template = new RestTemplate();
         ResponseEntity<String> resp = template.getForEntity(searchTerm, String.class);
+        // ResponseEntity throws an Exception for any status code >400!!
         if (resp.getStatusCodeValue() >= 400) {
             return Optional.empty();
         }
